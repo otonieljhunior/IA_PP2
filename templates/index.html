@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MXMH - Previsão de Saúde Mental</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>MSC - Análise e risco de  doenças mentais com base na música</h1>
+
+    <form method="post">
+      <label>Idade</label>
+      <input type="number" name="age" value="25" min="10" max="120" required>
+
+      <label>Horas ouvindo música por dia</label>
+      <input type="number" step="0.1" name="hours" value="2.0" min="0" max="24" required>
+
+      <label>Plataforma principal de streaming</label>
+      <select name="platform">
+        {% for p in platform_options %}
+          <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit">Analisar</button>
+    </form>
+
+    {% if erros %}
+      <div class="error">Erro: {{ erros }}</div>
+    {% endif %}
+
+    {% if resultado_final %}
+      <div class="result">
+        <h2>Resultado (melhor modelo por doença)</h2>
+        <ul>
+          {% for doenca, info in resultado_final.resultados.items() %}
+            <li><strong>{{ doenca }}:</strong> {{ info.classe }} — <em>Modelo usado:</em> {{ info.modelo_usado }}</li>
+          {% endfor %}
+        </ul>
+
+        <h3>Maior risco aparente: <span style="color:#ffdd57">{{ resultado_final.maior_risco_doenca }}</span>
+            — nível: {{ resultado_final.maior_risco_nivel }}</h3>
+      </div>
+
+      <div class="results-grid">
+        <div class="box">
+          <h3>Previsões por modelo</h3>
+          <table>
+            <thead><tr><th>Doença</th><th>RandomForest</th><th>SVM</th><th>KNN</th><th>LR</th></tr></thead>
+            <tbody>
+              {% for doenca in resultados_por_modelo['RandomForest'].keys() %}
+              <tr>
+                <td>{{ doenca }}</td>
+                <td>{{ resultados_por_modelo['RandomForest'][doenca] }}</td>
+                <td>{{ resultados_por_modelo['SVM'][doenca] }}</td>
+                <td>{{ resultados_por_modelo['KNN'][doenca] }}</td>
+                <td>{{ resultados_por_modelo['LR'][doenca] }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="box">
+          <h3>Acurácia dos modelos</h3>
+          <table>
+            <thead><tr><th>Doença</th><th>RF</th><th>SVM</th><th>KNN</th><th>LR</th></tr></thead>
+            <tbody>
+              {% for doenca, metas in acuracias.items() %}
+              <tr>
+                <td>{{ doenca }}</td>
+                <td>{{ "{:.2%}".format(metas['RandomForest']) }}</td>
+                <td>{{ "{:.2%}".format(metas['SVM']) }}</td>
+                <td>{{ "{:.2%}".format(metas['KNN']) }}</td>
+                <td>{{ "{:.2%}".format(metas['LR']) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    <footer style="margin-top:20px; font-size:0.9rem; color:#eef;">
+      Desenvolvido para protótipo — use com cautela (dados self-reported).
+    </footer>
+  </div>
+</body>
+</html>
